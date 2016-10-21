@@ -91,9 +91,9 @@ is-clean-z-release:
 release: is-clean-z-release dist
 	mkdir -p dist/release
 	tar -czf dist/release/dockerfy-linux-amd64-$(TAG).tar.gz -C dist/linux/amd64 dockerfy
-	@#tar -czf dist/release/dockerfy-linux-armel-$(TAG).tar.gz -C dist/linux/armel dockerfy
-	@#tar -czf dist/release/dockerfy-linux-armhf-$(TAG).tar.gz -C dist/linux/armhf dockerfy
 
+publish: release
+	hub release create -a dist/release/dockerfy-linux-amd64-$(TAG).tar.gz -m'$(TAG)' $(TAG)
 
 nginx-with-dockerfy:  dist/.mk.nginx-with-dockerfy
 

@@ -165,6 +165,19 @@ You can specify multiple secrets files by using a colon to separate the paths, o
 For convenience, all secrets files are combined into ~/.secrets/combined_secrets.json inside the ephemeral running
 container for each `--user` account in the users home directory so the program running as the user will have permission to read the values and so JavaScript, Python and Go programs can load the secrets programatically from a single file.  The combined secrets file location is exported as $SECRETS_FILE into the running --start, --run and primary command's environments.
 
+#### Loading Secret Settings from AWS Systems Manager Parameter Store
+Secrets can be stored in the AWS Systems Manager [Parameter Store](https://aws.amazon.com/ec2/systems-manager/parameter-store/).
+If you specify an expression like  {{ .AWS_Secret.**VARNAME** }} in a template then dockerfy will query the AWS Parameter store.
+It can retrieve the decoded values of at most 10 parameters. 
+Further you can specify a prefix (--aws-secret-prefix PPP). 
+This allows you n have multiple parameters in the Parameter Store with different prefixes...
+
+	PROD_DB_PASSWORD = xxx
+        TEST_DB_PASSWORD = yyy
+
+... and you can select a specific parameter by specifying `--aws-secret-prefix PROD_` and using {{ .AWS_Secret.**DB_PASSWORD** }} in your template.
+
+
 ##### Security Concerns
 1. **Reading secrets from files** -- Dockerfy only passes secrets to programs via configuration files to prevent leakage. Secrets could be passed to programs via the environment, but programs use the environment in unpredictable ways, such as logging, or perhaps even dumping their state back to the browser.
 2. **Installing Secrets** -- The recommended way to install secrets in production environments is to save them to a tightly protected place on the host and then mount that directory into running docker containers that need secrets. Yes, this is host-level security, but at this point in time, if the host running the docker daemon is not secure, then security has already been compromised.

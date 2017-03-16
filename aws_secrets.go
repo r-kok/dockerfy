@@ -12,18 +12,26 @@ import (
 //
 // return a map of AWS secrets (from AWS System Manager Parameter Store)
 //
+// If 'describe parameters' succeeds, returns a map of ENVIRONMENT variables with secrets overwritten from ssm.
+// Otherwise, returns a map of ENVIRONMENT variables only.
+//
+
 func getAWS_Secrets() map[string]string {
 
 	sess := session.Must(session.NewSession())
 	svc := ssm.New(sess)
 
-	secrets := fetchAWS_Secrets(svc, describeAWS_ParameterNames(svc))
+	parameterNames,err := describeAWS_ParameterNames(svc)
+        if err != nil {
+          return GetEnvMap()
+        }
+   	secrets := fetchAWS_Secrets(svc,parameterNames)
 	return asMap(secrets)
 }
 
 func asMap(parameters *ssm.GetParametersOutput) map[string]string {
 
-	secrets := make(map[string]string)
+	secrets := GetEnvMap() 
 	for i := 0; i < len(parameters.Parameters); i++ {
 		name := *parameters.Parameters[i].Name
 		name = strings.Replace(name, awsSecretsPrefixFlag, "", 1)
@@ -45,13 +53,14 @@ func fetchAWS_Secrets(svc *ssm.SSM, parameterNames []string) *ssm.GetParametersO
 	return resp
 }
 
-func describeAWS_ParameterNames(svc *ssm.SSM) []string {
+func describeAWS_ParameterNames(svc *ssm.SSM) ([]string,error) {
 	criteria := &ssm.DescribeParametersInput{
 		MaxResults: aws.Int64(10), // limited by API call GetParametersInput
 	}
 	resp, err := svc.DescribeParameters(criteria)
 	if err != nil {
-		log.Fatalf("cannot describe AWS Parameter Names %s", err.Error())
+		log.Printf("cannot describe AWS Parameter Names %s", err.Error())
+                return nil,err
 	}
 
 	size := len(resp.Parameters)
@@ -61,5 +70,5 @@ func describeAWS_ParameterNames(svc *ssm.SSM) []string {
 		names[i] = *resp.Parameters[i].Name
 	}
 
-	return names
+	return names,nil
 }

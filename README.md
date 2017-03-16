@@ -167,18 +167,17 @@ container for each `--user` account in the users home directory so the program r
 
 #### Loading Secret Settings from AWS Systems Manager Parameter Store
 Dcokerfy can also load secrets stored in the AWS Systems Manager [Parameter Store](https://aws.amazon.com/ec2/systems-manager/parameter-store/).
-If you specify an expression like `{{ .AWS_Secret.**VARNAME** }}` in a template then dockerfy will fetch parameters from the AWS Parameter store.
-It can retrieve the decoded values of at most 10 parameters. 
+If you specify an expression like `{{ .AWS_Secret.**VARNAME** }}` in a template then dockerfy will try to fetch the parameter from the AWS Parameter store.
+If the parameter cannot be found (due to lack or permission or because it does not exist) dockerfy falls back to using the value of a corresponding ENVIRONMENT value.
+Dockerfy retrieves the decoded values of at most 10 parameters. 
 
-If you store multiple parameters in the Parameter Store with different prefixes, for example for production and test:
+You can store multiple parameters in the Parameter Store with different prefixes. For example, for production and test:
 
     PROD_DB_PASSWORD = xxx
     TEST_DB_PASSWORD = yyy
 
-Dockerfy will select a specific parameter that matches the prefix given with option `--aws-secret-prefix PROD_`. You can use `{{ .AWS_Secret.**DB_PASSWORD** }}` in your template,
-thus without the prefix.
-
-If dockerfy cannot access a parameter it fall back to using the value of an corerspoding ENVIRONMENT value.
+To select a specific parameter that matches the prefix specify option `--aws-secret-prefix PROD_`. 
+You can use `{{ .AWS_Secret.**DB_PASSWORD** }}` in your template, thus without the prefix.
 
 
 ##### Security Concerns

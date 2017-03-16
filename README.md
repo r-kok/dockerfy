@@ -166,16 +166,19 @@ For convenience, all secrets files are combined into ~/.secrets/combined_secrets
 container for each `--user` account in the users home directory so the program running as the user will have permission to read the values and so JavaScript, Python and Go programs can load the secrets programatically from a single file.  The combined secrets file location is exported as $SECRETS_FILE into the running --start, --run and primary command's environments.
 
 #### Loading Secret Settings from AWS Systems Manager Parameter Store
-Secrets can be stored in the AWS Systems Manager [Parameter Store](https://aws.amazon.com/ec2/systems-manager/parameter-store/).
-If you specify an expression like  {{ .AWS_Secret.**VARNAME** }} in a template then dockerfy will query the AWS Parameter store.
+Dcokerfy can also load secrets stored in the AWS Systems Manager [Parameter Store](https://aws.amazon.com/ec2/systems-manager/parameter-store/).
+If you specify an expression like `{{ .AWS_Secret.**VARNAME** }}` in a template then dockerfy will fetch parameters from the AWS Parameter store.
 It can retrieve the decoded values of at most 10 parameters. 
-Further you can specify a prefix (--aws-secret-prefix PPP). 
-This allows you n have multiple parameters in the Parameter Store with different prefixes...
 
-	PROD_DB_PASSWORD = xxx
-        TEST_DB_PASSWORD = yyy
+If you store multiple parameters in the Parameter Store with different prefixes, for example for production and test:
 
-... and you can select a specific parameter by specifying `--aws-secret-prefix PROD_` and using {{ .AWS_Secret.**DB_PASSWORD** }} in your template.
+    PROD_DB_PASSWORD = xxx
+    TEST_DB_PASSWORD = yyy
+
+Dockerfy will select a specific parameter that matches the prefix given with option `--aws-secret-prefix PROD_`. You can use `{{ .AWS_Secret.**DB_PASSWORD** }}` in your template,
+thus without the prefix.
+
+If dockerfy cannot access a parameter it fall back to using the value of an corerspoding ENVIRONMENT value.
 
 
 ##### Security Concerns

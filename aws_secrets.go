@@ -26,6 +26,9 @@ func getAWS_Secrets() map[string]string {
           return GetEnvMap()
         }
         filtered := filterNames(parameterNames, awsSecretsPrefixFlag)
+        if len(filtered) == 0 {
+          return GetEnvMap()
+        }
    	secrets := fetchAWS_Secrets(svc,filtered)
 	return asMap(secrets)
 }

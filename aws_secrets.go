@@ -25,7 +25,8 @@ func getAWS_Secrets() map[string]string {
         if err != nil {
           return GetEnvMap()
         }
-   	secrets := fetchAWS_Secrets(svc,parameterNames)
+        filtered := filterNames(parameterNames, awsSecretsPrefixFlag)
+   	secrets := fetchAWS_Secrets(svc,filtered)
 	return asMap(secrets)
 }
 
@@ -34,7 +35,7 @@ func asMap(parameters *ssm.GetParametersOutput) map[string]string {
 	secrets := GetEnvMap() 
 	for i := 0; i < len(parameters.Parameters); i++ {
 		name := *parameters.Parameters[i].Name
-		name = strings.Replace(name, awsSecretsPrefixFlag, "", 1)
+                name = strings.Replace(name, awsSecretsPrefixFlag, "", 1)
 		secrets[name] = *parameters.Parameters[i].Value
 	}
 	return secrets
@@ -51,6 +52,18 @@ func fetchAWS_Secrets(svc *ssm.SSM, parameterNames []string) *ssm.GetParametersO
 		log.Fatalf("cannot fetch AWS System Manager Parameters %s", err.Error())
 	}
 	return resp
+}
+
+
+func filterNames(input []string, prefix string) []string {
+	size := len(input)
+        var output []string
+        for i := 0; i < size; i++ {
+                if strings.HasPrefix(input[i], prefix) {
+                        output = append(output, input[i])
+                }
+        }
+        return output
 }
 
 func describeAWS_ParameterNames(svc *ssm.SSM) ([]string,error) {

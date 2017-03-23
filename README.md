@@ -145,7 +145,7 @@ If the source path ends with a /, then all subdirectories underneath it will be 
 Overlay sources that do not exist are simply skipped.  The allows you to specify potential sources of content that may or may not exist in the running container.  In the above example if $DEPLOYMENT_ENV environment variable is set to 'local' then the second overlaw will be skipped if there is no corresponding /app/overlays/local source directory, and the container will run with the '_common' html content.
 
 #### Loading Secret Settings
-Secrets can loaded from files by using the `--secrets-files` option or the $SECRETS_FILES environment variable.   The secrets files ending with `.env` must contain simple NAME=VALUE lines, following bash shell conventions for definitions and comments. Leading and trailing quotes will be trimmed from the value.  Secrets files ending with `.json` will be loaded as JSON, and must be `a simple single-level dictionary of strings`
+Secrets can be loaded from files by using the `--secrets-files` option or the $SECRETS_FILES environment variable.   The secrets files ending with `.env` must contain simple NAME=VALUE lines, following bash shell conventions for definitions and comments. Leading and trailing quotes will be trimmed from the value.  Secrets files ending with `.json` will be loaded as JSON, and must be `a simple single-level dictionary of strings`
 
     #
     # These are our secrets
@@ -166,10 +166,10 @@ For convenience, all secrets files are combined into ~/.secrets/combined_secrets
 container for each `--user` account in the users home directory so the program running as the user will have permission to read the values and so JavaScript, Python and Go programs can load the secrets programatically from a single file.  The combined secrets file location is exported as $SECRETS_FILE into the running --start, --run and primary command's environments.
 
 #### Loading Secret Settings from AWS Systems Manager Parameter Store
-Dcokerfy can also load secrets stored in the AWS Systems Manager [Parameter Store](https://aws.amazon.com/ec2/systems-manager/parameter-store/).
+**Dockerfy** can also load secrets stored in the AWS Systems Manager [Parameter Store](https://aws.amazon.com/ec2/systems-manager/parameter-store/).
 If you specify an expression like `{{ .AWS_Secret.**VARNAME** }}` in a template then dockerfy will try to fetch the parameter from the AWS Parameter store.
 If the parameter cannot be found (due to lack or permission or because it does not exist) dockerfy falls back to using the value of a corresponding ENVIRONMENT value.
-Dockerfy retrieves the decoded values of at most 10 parameters. 
+**Dockerfy** retrieves the decoded values of at most 10 parameters. 
 
 You can store multiple parameters in the Parameter Store with different prefixes. For example, for production and test:
 

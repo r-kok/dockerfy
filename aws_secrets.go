@@ -25,7 +25,8 @@ func getAWS_Secrets() map[string]string {
         if err != nil {
           return GetEnvMap()
         }
-        filtered := filterNames(parameterNames, awsSecretsPrefixFlag)
+        prefix := string_template_eval(awsSecretsPrefixFlag)
+        filtered := filterNames(parameterNames, prefix)
         if len(filtered) == 0 {
           return GetEnvMap()
         }
@@ -36,9 +37,10 @@ func getAWS_Secrets() map[string]string {
 func asMap(parameters *ssm.GetParametersOutput) map[string]string {
 
 	secrets := GetEnvMap() 
+        prefix := string_template_eval(awsSecretsPrefixFlag)
 	for i := 0; i < len(parameters.Parameters); i++ {
 		name := *parameters.Parameters[i].Name
-                name = strings.Replace(name, awsSecretsPrefixFlag, "", 1)
+                name = strings.Replace(name, prefix, "", 1)
 		secrets[name] = *parameters.Parameters[i].Value
 	}
 	return secrets

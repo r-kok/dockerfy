@@ -73,7 +73,7 @@ func filterNames(input []string, prefix string) []string {
 
 func describeAWS_ParameterNames(svc *ssm.SSM) ([]string,error) {
 	criteria := &ssm.DescribeParametersInput{
-		MaxResults: aws.Int64(10), // limited by API call GetParametersInput
+		MaxResults: aws.Int64(45), // limited by API call GetParametersInput
 	}
 	resp, err := svc.DescribeParameters(criteria)
 	if err != nil {

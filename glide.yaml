@@ -1,13 +1,14 @@
+---
 package: github.com/SocialCodeInc/dockerfy
 import:
-- package: github.com/hpcloud/tail
-- package: github.com/aws/aws-sdk-go
-  subpackages:
-  - services/ssm
-  - session
-- package: golang.org/x/net
-  subpackages:
-  - context
-- package: golang.org/x/sys
-  subpackages:
-  - unix
+  - package: github.com/hpcloud/tail
+  - package: github.com/aws/aws-sdk-go
+    subpackages:
+      - service/ssm
+      - session
+  - package: golang.org/x/net
+    subpackages:
+      - context
+  - package: golang.org/x/sys
+    subpackages:
+      - unix

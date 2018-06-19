@@ -7,86 +7,75 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ssm"
+	"github.com/aws/aws-sdk-go/service/ssm/ssmiface"
 )
 
 //
 // return a map of AWS secrets (from AWS System Manager Parameter Store)
 //
-// If 'describe parameters' succeeds, returns a map of ENVIRONMENT variables with secrets overwritten from ssm.
+// If fetchAWSSecrets succeeds, returns a map of ENVIRONMENT variables with secrets overwritten from ssm.
 // Otherwise, returns a map of ENVIRONMENT variables only.
 //
 
-func getAWS_Secrets() map[string]string {
-
-	sess := session.Must(session.NewSession())
-	svc := ssm.New(sess)
-
-	parameterNames,err := describeAWS_ParameterNames(svc)
-        if err != nil {
-          return GetEnvMap()
-        }
-        prefix := string_template_eval(awsSecretsPrefixFlag)
-        filtered := filterNames(parameterNames, prefix)
-        if len(filtered) == 0 {
-          return GetEnvMap()
-        }
-   	secrets := fetchAWS_Secrets(svc,filtered)
-	return asMap(secrets)
+type Secret struct {
+	Value string
+	Key   string
 }
 
-func asMap(parameters *ssm.GetParametersOutput) map[string]string {
+func getAWSSecrets() map[string]string {
+	var svc ssmiface.SSMAPI
 
-	secrets := GetEnvMap() 
-        prefix := string_template_eval(awsSecretsPrefixFlag)
-	for i := 0; i < len(parameters.Parameters); i++ {
-		name := *parameters.Parameters[i].Name
-                name = strings.Replace(name, prefix, "", 1)
-		secrets[name] = *parameters.Parameters[i].Value
+	secrets := GetEnvMap()
+
+	sess := session.Must(session.NewSession())
+	svc = ssm.New(sess)
+
+	prefix := string_template_eval(awsSecretsPrefixFlag)
+	rawSecrets, err := fetchAWSSecrets(prefix, svc)
+	if err != nil {
+		log.Printf("Cannot fetch parameters from AWS Parameter store: %s", err.Error())
+		return secrets
 	}
+
+	for _, rawSecret := range rawSecrets {
+		key := strings.Replace(rawSecret.Key, prefix, "", 1)
+		secrets[key] = rawSecret.Value
+	}
+
 	return secrets
 }
 
-func fetchAWS_Secrets(svc *ssm.SSM, parameterNames []string) *ssm.GetParametersOutput {
-	params := &ssm.GetParametersInput{
-		Names:          aws.StringSlice(parameterNames),
-		WithDecryption: aws.Bool(true),
-	}
-	resp, err := svc.GetParameters(params)
+func fetchAWSSecrets(prefix string, svc ssmiface.SSMAPI) ([]*Secret, error) {
+	secrets := []*Secret{}
 
-	if err != nil {
-		log.Fatalf("cannot fetch AWS System Manager Parameters %s", err.Error())
-	}
-	return resp
-}
+	var nextToken *string
+	for {
+		getParametersByPathInput := &ssm.GetParametersByPathInput{
+			MaxResults:     aws.Int64(10),
+			NextToken:      nextToken,
+			Path:           aws.String(prefix),
+			WithDecryption: aws.Bool(true),
+		}
 
+		resp, err := svc.GetParametersByPath(getParametersByPathInput)
+		if err != nil {
+			return nil, err
+		}
 
-func filterNames(input []string, prefix string) []string {
-	size := len(input)
-        var output []string
-        for i := 0; i < size; i++ {
-                if strings.HasPrefix(input[i], prefix) {
-                        output = append(output, input[i])
-                }
-        }
-        return output
-}
+		for _, param := range resp.Parameters {
+			secret := &Secret{
+				Value: *param.Value,
+				Key:   *param.Name,
+			}
+			secrets = append(secrets, secret)
+		}
 
-func describeAWS_ParameterNames(svc *ssm.SSM) ([]string,error) {
-	criteria := &ssm.DescribeParametersInput{
-		MaxResults: aws.Int64(45), // limited by API call GetParametersInput
-	}
-	resp, err := svc.DescribeParameters(criteria)
-	if err != nil {
-		log.Printf("cannot describe AWS Parameter Names %s", err.Error())
-                return nil,err
+		if resp.NextToken == nil {
+			break
+		}
+
+		nextToken = resp.NextToken
 	}
 
-	size := len(resp.Parameters)
-	names := make([]string, size)
-
-	for i := 0; i < size; i++ {
-		names[i] = *resp.Parameters[i].Name
-	}
-
-	return names,nil
+	return secrets, nil
 }

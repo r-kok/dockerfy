@@ -18,12 +18,12 @@ type TemplateContext struct {
 }
 
 func GetEnvMap() map[string]string {
-    env := make(map[string]string)
-    for _, i := range os.Environ() {
-        sep := strings.Index(i, "=")
-        env[i[0:sep]] = i[sep+1:]
-    }
-    return env
+	env := make(map[string]string)
+	for _, i := range os.Environ() {
+		sep := strings.Index(i, "=")
+		env[i[0:sep]] = i[sep+1:]
+	}
+	return env
 }
 
 //
@@ -32,7 +32,7 @@ func GetEnvMap() map[string]string {
 // '{{concat "P" "WD" | getenv}}' will print $PWD
 //
 func GetEnv(v string) string {
-    return GetEnvMap()[v]
+	return GetEnvMap()[v]
 }
 
 //
@@ -58,13 +58,12 @@ func (c *TemplateContext) Secret() map[string]string {
 }
 
 func (c *TemplateContext) AWS_Secret() map[string]string {
-        if c.aws_secrets != nil {
-                return c.aws_secrets
-        }
-        c.aws_secrets = getAWS_Secrets()
-        return c.aws_secrets
+	if c.aws_secrets != nil {
+		return c.aws_secrets
+	}
+	c.aws_secrets = getAWSSecrets()
+	return c.aws_secrets
 }
-
 
 func exists(path string) (bool, error) {
 	_, err := os.Stat(path)
@@ -123,52 +122,52 @@ func add(arg1, arg2 int) int {
 }
 
 func concat(args ...string) (s string) {
-    s = ""
-    for _, v := range args {
-        s = s + v
-    }
-    return
+	s = ""
+	for _, v := range args {
+		s = s + v
+	}
+	return
 }
 
 func sequence(firstS, lastS string) []string {
-    // return a sequence of strings from first to last (inclusive)
-    // `sequence 3 5` returns ["3", "4", "5"]
-    first, _ := strconv.Atoi(firstS)
-    last, _ := strconv.Atoi(lastS)
+	// return a sequence of strings from first to last (inclusive)
+	// `sequence 3 5` returns ["3", "4", "5"]
+	first, _ := strconv.Atoi(firstS)
+	last, _ := strconv.Atoi(lastS)
 
-    if last < first {
-        last, first = 0, 0
-    }
-    sequence := make([]string, (last - first + 1))
+	if last < first {
+		last, first = 0, 0
+	}
+	sequence := make([]string, (last - first + 1))
 
-    for i := 0; i + first <= last; i++ {
-        sequence[i] = strconv.Itoa(i + first)
-    }
-    return sequence
+	for i := 0; i+first <= last; i++ {
+		sequence[i] = strconv.Itoa(i + first)
+	}
+	return sequence
 }
 
 var funcMap = template.FuncMap{
-        "contains": contains,
-        "exists":   exists,
-        "split":    strings.Split,
-        "replace":  strings.Replace,
-        "default":  defaultValue,
-        "parseUrl": parseUrl,
-        "atoi":     strconv.Atoi,
-        "add":      add,
-        "concat":   concat,
-        "sequence": sequence,
-        "N":        sequence,
-        "getenv":   GetEnv,
-    }
+	"contains": contains,
+	"exists":   exists,
+	"split":    strings.Split,
+	"replace":  strings.Replace,
+	"default":  defaultValue,
+	"parseUrl": parseUrl,
+	"atoi":     strconv.Atoi,
+	"add":      add,
+	"concat":   concat,
+	"sequence": sequence,
+	"N":        sequence,
+	"getenv":   GetEnv,
+}
+
 //
 // Execute the string_template under the TemplateContext, and
 // return the result as a string
 //
 func string_template_eval(string_template string) string {
 	var result bytes.Buffer
-    t := template.New("String Template").Funcs(funcMap)
-
+	t := template.New("String Template").Funcs(funcMap)
 
 	t, err := t.Parse(string_template)
 	if err != nil {
@@ -225,4 +224,3 @@ func generateFile(templatePath, destPath string) bool {
 
 	return true
 }
-

@@ -1,8 +1,8 @@
-hash: f7c96fff6dfa8e27fee8c4885fc2afd882dcc13ee2892d613a863cd59724605b
-updated: 2017-03-15T12:52:02.768149871+01:00
+hash: 936f1f83eb24c5d23d1e7e462142cbcf3dd2561d622294e5e16746e042e2d779
+updated: 2018-06-18T16:51:15.764139+02:00
 imports:
 - name: github.com/aws/aws-sdk-go
-  version: 62c16d8bf2fd6ee59f2bf11ae8268d045470ccf6
+  version: efab853f45fc7a963059adbd2d552f828684afd4
   subpackages:
   - aws
   - aws/awserr
@@ -14,12 +14,16 @@ imports:
   - aws/credentials/ec2rolecreds
   - aws/credentials/endpointcreds
   - aws/credentials/stscreds
+  - aws/csm
   - aws/defaults
   - aws/ec2metadata
   - aws/endpoints
   - aws/request
   - aws/session
   - aws/signer/v4
+  - internal/sdkio
+  - internal/sdkrand
+  - internal/shareddefaults
   - private/protocol
   - private/protocol/json/jsonutil
   - private/protocol/jsonrpc
@@ -28,30 +32,30 @@ imports:
   - private/protocol/rest
   - private/protocol/xml/xmlutil
   - service/ssm
+  - service/ssm/ssmiface
   - service/sts
-  - services/ssm
   - session
 - name: github.com/go-ini/ini
-  version: 98c45284d68a05a0e0a576de574bd975946ef9ad
+  version: cec2bdc49009247305a260b082a18e802d0fe292
 - name: github.com/hpcloud/tail
-  version: a30252cb686a21eb2d0b98132633053ec2f7f1e5
+  version: a1dbeea552b7c8df4b542c66073e393de198a800
   subpackages:
   - ratelimiter
   - util
   - watch
   - winfile
 - name: github.com/jmespath/go-jmespath
-  version: bd40a432e4c76585ef6b72d3fd96fb9b6dc7b68d
+  version: c2b33e8439af944379acbdd9c3a5fe0bc44bd8a5
 - name: golang.org/x/net
-  version: ffe101cce3477a6c6d8f0754d103bb0a84ec1266
+  version: db08ff08e8622530d9ed3a0e8ac279f6d4c02196
   subpackages:
   - context
 - name: golang.org/x/sys
-  version: 8f0908ab3b2457e2e15403d3697c9ef5cb4b57a9
+  version: 6c888cc515d3ed83fc103cf1d84468aad274b0a7
   subpackages:
   - unix
-- name: gopkg.in/fsnotify.v1
-  version: 7be54206639f256967dd82fa767397ba5f8f48f5
+- name: gopkg.in/fsnotify/fsnotify.v1
+  version: c2828203cd70a50dcccfb2761f8b1f8ceef9a8e9
 - name: gopkg.in/tomb.v1
   version: c131134a1947e9afd9cecfe11f4c6dff0732ae58
 testImports: []

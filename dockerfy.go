@@ -45,13 +45,14 @@ var (
 	reapFlag             bool
 	runsFlag             sliceVar
 	secretsFilesFlag     sliceVar
+	awsSecretsPrefixFlag string
 	startsFlag           sliceVar
 	stderrTailFlag       sliceVar
 	stdoutTailFlag       sliceVar
 	templatesFlag        sliceVar
 	usersFlag            sliceVar
-    verboseFlag          bool
-    debugFlag            bool
+	verboseFlag          bool
+	debugFlag            bool
 	versionFlag          bool
 	waitFlag             hostFlagsVar
 	waitTimeoutFlag      time.Duration
@@ -128,6 +129,10 @@ Arguments:
 
        dockerfy --start /bin/sleep 5 -- /bin/service
 	     `)
+	println(`   Retrieve parameters with a given prefix from AWS Parameter store and use them in a template:
+
+       dockerfy --aws-secret-prefix PRODUCTION /bin/echo '{{ .AWS_Secret.password }}'
+	     `)
 	println(`For more information, see https://github.com/markriggins/dockerfy `)
 }
 
@@ -149,11 +154,12 @@ func main() {
 	flag.Var(&templatesFlag, "template", "Template (/template:/dest). Can be passed multiple times")
 	flag.Var(&overlaysFlag, "overlay", "overlay (/src:/dest). Can be passed multiple times")
 	flag.Var(&secretsFilesFlag, "secrets-files", "secrets files (path to secrets.env files). Colon-separated list")
+	flag.StringVar(&awsSecretsPrefixFlag, "aws-secret-prefix", "", "Prefix for Secrets stored in the AWS Systems Manager Parameter Store")
 	flag.Var(&runsFlag, "run", "run (cmd [opts] [args] --) Can be passed multiple times")
 	flag.Var(&startsFlag, "start", "start (cmd [opts] [args] --) Can be passed multiple times")
 	flag.BoolVar(&reapFlag, "reap", false, "reap all zombie processes")
-    flag.BoolVar(&verboseFlag, "verbose", false, "verbose output")
-    flag.BoolVar(&debugFlag, "debug", false, "debugging output")
+	flag.BoolVar(&verboseFlag, "verbose", false, "verbose output")
+	flag.BoolVar(&debugFlag, "debug", false, "debugging output")
 	flag.Var(&stdoutTailFlag, "stdout", "Tails a file to stdout. Can be passed multiple times")
 	flag.Var(&stderrTailFlag, "stderr", "Tails a file to stderr. Can be passed multiple times")
 	flag.StringVar(&delimsFlag, "delims", "", `template tag delimiters. default "{{":"}}" `)
@@ -161,16 +167,16 @@ func main() {
 	flag.DurationVar(&waitTimeoutFlag, "timeout", 10*time.Second, "Host wait timeout duration, defaults to 10s")
 	flag.DurationVar(&reapPollIntervalFlag, "reap-poll-interval", 120*time.Second, "Polling interval for reaping zombies")
 
-    // Manually pre-process the --debug and --verbose flags so we can debug our complex argument pre-processing
-    // that happens BEFORE flag.Parse()
-    for i := 0; i < len(os.Args); i++ {
-        if strings.TrimSpace(os.Args[i]) == "--debug" {
-            debugFlag = true
-            log.Printf("debugging output ..")
-        } else if strings.TrimSpace(os.Args[i]) == "--verbose" {
-            verboseFlag = true
-        }
-    }
+	// Manually pre-process the --debug and --verbose flags so we can debug our complex argument pre-processing
+	// that happens BEFORE flag.Parse()
+	for i := 0; i < len(os.Args); i++ {
+		if strings.TrimSpace(os.Args[i]) == "--debug" {
+			debugFlag = true
+			log.Printf("debugging output ..")
+		} else if strings.TrimSpace(os.Args[i]) == "--verbose" {
+			verboseFlag = true
+		}
+	}
 
 	var commands = removeCommandsFromOsArgs()
 
@@ -202,9 +208,9 @@ func main() {
 
 	// Overlay files from src --> dst
 	for _, o := range overlaysFlag {
-        if debugFlag {
-            log.Printf("--overlay: %s", o)
-        }
+		if debugFlag {
+			log.Printf("--overlay: %s", o)
+		}
 		if strings.Contains(o, ":") {
 			parts := strings.Split(o, ":")
 			if len(parts) != 2 {
@@ -275,10 +281,10 @@ func main() {
 			}
 		}, cmd, false /*cancel_when_finished*/)
 		wg.Wait()
-        if exitCode != 0 {
-            cancel()
-            os.Exit(exitCode)
-        }
+		if exitCode != 0 {
+			cancel()
+			os.Exit(exitCode)
+		}
 	}
 
 	for _, logFile := range stdoutTailFlag {
@@ -335,7 +341,7 @@ func main() {
 			cancel()
 		}, primary_command, true /*cancel_when_finished*/)
 
-        //TODO -- catch signals and log the fact that dockerfy itself was terminated
+		//TODO -- catch signals and log the fact that dockerfy itself was terminated
 	} else {
 		cancel()
 	}
